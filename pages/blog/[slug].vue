@@ -6,21 +6,40 @@
 		<!-- Featured Image -->
 		<img v-if="post.featuredImage" :src="post.featuredImage" :alt="post.title" class="featured-image" />
 
-		<!-- Blog Content -->
+		<!-- Blog Content (Full Markdown) -->
 		<MDC :value="post.body" />
 
-		<!-- Tags Section -->
+		<!-- Categories -->
+		<div v-if="post.categories && post.categories.length" class="categories">
+			<strong>Categories:</strong>
+			<NuxtLink
+				v-for="category in post.categories"
+				:key="category"
+				:to="`/blog/category/${category}`"
+				class="category-link"
+			>
+				{{ category }}
+			</NuxtLink>
+		</div>
+
+		<!-- Tags -->
 		<div v-if="post.tags && post.tags.length" class="tags">
-			<span v-for="tag in post.tags" :key="tag" class="tag">
+			<strong>Tags:</strong>
+			<NuxtLink
+				v-for="tag in post.tags"
+				:key="tag"
+				:to="`/blog/tag/${tag}`"
+				class="tag-link"
+			>
 				#{{ tag }}
-			</span>
+			</NuxtLink>
 		</div>
 
 		<!-- Author -->
 		<p class="author">By: {{ post.author }}</p>
 
 		<!-- Back to Blog -->
-		<NuxtLink to="/" class="back-link">← Back to Blog</NuxtLink>
+		<NuxtLink to="/blog" class="back-link">← Back to Blog</NuxtLink>
 	</main>
 
 	<!-- Loading State -->
@@ -30,9 +49,10 @@
 <script setup>
 const route = useRoute();
 
-// Fetch the post and set default values to prevent errors
+// Fetch blog post content
 const { data: post } = reactive(await useAsyncData("post", () =>
-	queryContent("/blog", route.params.slug).findOne(), { default: () => ({ tags: [], author: "Unknown" }) }
+	queryContent("/blog").where({ _path: `/blog/${route.params.slug}` }).findOne(), 
+	{ default: () => ({ categories: [], tags: [], author: "Unknown" }) }
 ));
 
 // Function to format dates
@@ -56,16 +76,14 @@ const formatDate = (date) => (date ? new Date(date).toLocaleDateString() : "No d
 	font-size: 0.9rem;
 	margin-bottom: 10px;
 }
-.tags {
+.categories, .tags {
 	margin-top: 10px;
-	.tag {
-		display: inline-block;
-		background: #f3f3f3;
-		color: #333;
-		padding: 5px 10px;
-		border-radius: 5px;
-		margin-right: 5px;
-		font-size: 0.9rem;
+	font-size: 0.9rem;
+	.category-link, .tag-link {
+		margin-right: 10px;
+		text-decoration: none;
+		color: #007bff;
+		font-weight: bold;
 	}
 }
 .author {
