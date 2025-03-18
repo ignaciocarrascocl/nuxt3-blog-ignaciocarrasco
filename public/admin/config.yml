@@ -1,22 +1,17 @@
-# disable in production:  
-# local_backend: truee
-# command to run a local Decap instance: npx-decap-server
-
 backend:
   name: git-gateway
-  branch: main # Branch to update (optional; defaults to master)
+  branch: main
 
 media_folder: "public/upload"
 public_folder: "/"
 
-site_url: https://calm-gecko-89ac4d.netlify.app
+site_url: https://blog.ignaciocarrasco.cl/
 
 media_library:
   name: cloudinary
-  # output_filename_only: true
   config:
     cloud_name: <YOUR_CLOUD_NAME_HERE>
-    api_key: <YOUR_API_KEY_HERE> 
+    api_key: <YOUR_API_KEY_HERE>
 
 # SEO anchor:
 seo: &seo
@@ -31,30 +26,6 @@ seo: &seo
     - { name: "keywords", label: "keywords", widget: "string", hint: "keywords are comma seperated", required: false }
 
 collections:
-  - name: "globalContent"
-    label: "global content"
-    files: 
-      - label: "buttons"
-        name: "buttons"
-        file: "content/site/buttons.md"    
-        fields: 
-          - label: "next"
-            name: "next"
-            widget: "string"        
-          - label: "previous"
-            name: "previous"
-            widget: "string"        
-          - label: "close"
-            name: "close"
-            widget: "string"        
-          - label: "article: more"
-            name: "article"
-            widget: "string"
-            default: "read more"
-          - label: "form: send"
-            name: "send"
-            widget: "string"
-
   # SINGLE PAGES
   - name: "pages"
     label: "Pages"
@@ -65,34 +36,23 @@ collections:
         fields:
           - { name: "title", label: "Title", widget: "string" }
           - { name: "content", label: "Content", widget: "markdown" }
+          - { name: "featuredPosts", label: "Featured Posts", widget: "relation", collection: "blog", search_fields: ["title"], value_field: "title", multiple: true, required: false }
           - *seo
-      - name: "typography"
-        label: "Typography"
-        file: "content/pages/typography.md"
-        fields:
-          - { name: "title", label: "Title", widget: "string" }
-          - { name: "content", label: "Content", widget: "markdown" }
-      - name: "Fiddly diddlies"
-        label: "diddlies"
-        extension: json
-        file: "content/pages/fiddly-diddlies.json"
-        fields:
-          - { name: "title", label: "Title", widget: "string" }
-          - { name: "test-fields", label: "field objects test", widget: "string", default: "fields.title" }
-          - { name: "content", label: "Content", widget: "markdown" }
 
   # BLOG POSTS COLLECTION
   - name: "blog"
     label: "Blog Posts"
-    folder: "content/blog" # Folder where blog posts will be stored
-    create: true # Allows creating new posts
-    slug: "{{year}}-{{month}}-{{day}}-{{slug}}" # Filename template
+    folder: "content/blog"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     fields:
-      - { name: "title", label: "Title", widget: "string" }
-      - { name: "date", label: "Date", widget: "datetime", default: "" }
+      - { name: "title", label: "Title", widget: "string", required: true }
+      - { name: "date", label: "Publish Date", widget: "datetime", default: "", required: true }
       - { name: "featuredImage", label: "Featured Image", widget: "image", required: false }
-      - { name: "body", label: "Body", widget: "markdown" }
-      - { name: "author", label: "Author", widget: "string", default: "Your Name" }
-      - { name: "categories", label: "Categories", widget: "list", required: false }
-      - { name: "tags", label: "Tags", widget: "list", required: false }
-      - *seo # Reuses your existing SEO configuration
+      - { name: "summary", label: "Summary", widget: "text", required: false }
+      - { name: "body", label: "Body", widget: "markdown", required: true }
+      - { name: "author", label: "Author", widget: "string", default: "Your Name", required: true }
+      - { name: "categories", label: "Categories", widget: "list", field: { name: "category", label: "Category", widget: "string" }, required: false }
+      - { name: "tags", label: "Tags", widget: "list", field: { name: "tag", label: "Tag", widget: "string" }, required: false }
+      - { name: "draft", label: "Draft", widget: "boolean", default: false }
+      - *seo
