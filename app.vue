@@ -7,5 +7,3 @@
 		</NuxtLayout>
 	</div>
 </template>
-
-
