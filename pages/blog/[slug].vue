@@ -3,71 +3,79 @@
 		<h1>{{ post.title }}</h1>
 		<p class="date">{{ formatDate(post.date) }}</p>
 
-		<!-- Imagen destacada -->
+		<!-- Featured Image -->
 		<img v-if="post.featuredImage" :src="post.featuredImage" :alt="post.title" class="featured-image" />
 
-		<!-- Contenido del post (Markdown procesado) -->
+		<!-- Blog Content -->
 		<MDC :value="post.body" />
 
-		<!-- Categorías -->
-		<div v-if="post.categories && post.categories.length" class="categories">
-			<strong>Categorías:</strong>
-			<NuxtLink
-				v-for="category in post.categories"
-				:key="category"
-				:to="`/blog/category/${category}`"
-				class="category-link"
-			>
-				{{ category }}
-			</NuxtLink>
+		<!-- Tags Section -->
+		<div v-if="post.tags && post.tags.length" class="tags">
+			<span v-for="tag in post.tags" :key="tag" class="tag">
+				#{{ tag }}
+			</span>
 		</div>
 
-		<!-- Tags -->
-		<div v-if="post.tags && post.tags.length" class="tags">
-			<strong>Etiquetas:</strong>
-			<NuxtLink
-				v-for="tag in post.tags"
-				:key="tag"
-				:to="`/blog/tag/${tag}`"
-				class="tag-link"
-			>
-				{{ tag }}
-			</NuxtLink>
-		</div>
+		<!-- Author -->
+		<p class="author">By: {{ post.author }}</p>
+
+		<!-- Back to Blog -->
+		<NuxtLink to="/" class="back-link">← Back to Blog</NuxtLink>
 	</main>
+
+	<!-- Loading State -->
+	<p v-else class="loading">Loading post...</p>
 </template>
 
 <script setup>
-import { useRoute } from 'vue-router';
-import { useAsyncData } from '#app';
-
 const route = useRoute();
-const { data: post } = await useAsyncData("post", () =>
-  queryContent("/blog")
-    .where({ slug: route.params.slug })
-    .findOne()
-);
 
-const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-};
+// Fetch the post and set default values to prevent errors
+const { data: post } = reactive(await useAsyncData("post", () =>
+	queryContent("/blog", route.params.slug).findOne(), { default: () => ({ tags: [], author: "Unknown" }) }
+));
+
+// Function to format dates
+const formatDate = (date) => (date ? new Date(date).toLocaleDateString() : "No date available");
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .post-container {
-  max-width: 800px;
-  margin: 0 auto;
+	max-width: 800px;
+	margin: auto;
+	padding: 20px;
 }
 .featured-image {
-  width: 100%;
-  margin-bottom: 1rem;
+	width: 100%;
+	max-height: 400px;
+	object-fit: cover;
+	border-radius: 8px;
 }
-.categories, .tags {
-  margin-top: 2rem;
+.date {
+	color: #888;
+	font-size: 0.9rem;
+	margin-bottom: 10px;
 }
-.category-link, .tag-link {
-  margin-right: 10px;
-  color: #007BFF;
+.tags {
+	margin-top: 10px;
+	.tag {
+		display: inline-block;
+		background: #f3f3f3;
+		color: #333;
+		padding: 5px 10px;
+		border-radius: 5px;
+		margin-right: 5px;
+		font-size: 0.9rem;
+	}
+}
+.author {
+	margin-top: 20px;
+	font-weight: bold;
+}
+.back-link {
+	display: inline-block;
+	margin-top: 20px;
+	color: #007bff;
+	text-decoration: none;
 }
 </style>

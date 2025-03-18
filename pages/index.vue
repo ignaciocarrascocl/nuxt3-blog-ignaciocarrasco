@@ -1,58 +1,88 @@
 <template>
 	<main id="main" class="home">
-		<div v-for="post in posts" :key="post.slug" class="post-summary">
-			<h2>{{ post.title }}</h2>
-			<p>{{ post.summary || post.body.substring(0, 140) + '...' }}</p>
-			<NuxtLink :to="`/blog/${post.slug}`" class="read-more">Leer más</NuxtLink>
-			<p class="date">{{ formatDate(post.date) }}</p>
+		<section v-if="paginatedPosts.length">
+			<article v-for="post in paginatedPosts" :key="post._path" class="post-card">
+				<NuxtLink :to="post._path">
+					<h2>{{ post.title }}</h2>
+					<p>{{ post.summary || getPreviewText(post.body) }}</p>
+					<small>{{ formatDate(post.date) }}</small>
+				</NuxtLink>
+			</article>
+		</section>
+
+		<!-- Pagination Controls -->
+		<div v-if="totalPages > 1" class="pagination">
+			<button :disabled="currentPage === 1" @click="prevPage">← Prev</button>
+			<span>Page {{ currentPage }} of {{ totalPages }}</span>
+			<button :disabled="currentPage === totalPages" @click="nextPage">Next →</button>
 		</div>
-		<!-- Paginación -->
-		<Pagination :currentPage="currentPage" :totalPages="totalPages" @changePage="loadPosts" />
+
+		<p v-else>No blog posts found.</p>
 	</main>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
-import { useAsyncData } from '#app';
-import Pagination from '~/components/Pagination.vue';  // Asegúrate de tener un componente de paginación
+const POSTS_PER_PAGE = 10;
 
-const currentPage = ref(1);
-const totalPages = ref(0);
-const posts = ref([]);
+// Fetch blog posts
+const { data: posts } = reactive(await useAsyncData("posts", () =>
+	queryContent("/blog").sort({ date: -1 }).find()
+));
 
-const loadPosts = async (page = 1) => {
-  currentPage.value = page;
-  const { data } = await useAsyncData("posts", () =>
-    queryContent("/blog")
-      .sort("-date")
-      .limit(10)
-      .skip((page - 1) * 10)  // Paginación
-      .find()
-  );
-  posts.value = data;
-  totalPages.value = Math.ceil(data.length / 10); // Ajusta la lógica para obtener el total de páginas
+// Pagination state
+const currentPage = useState("currentPage", () => 1);
+const totalPages = computed(() => Math.ceil(posts.length / POSTS_PER_PAGE));
+
+// Paginated posts
+const paginatedPosts = computed(() => {
+	const start = (currentPage.value - 1) * POSTS_PER_PAGE;
+	return posts.slice(start, start + POSTS_PER_PAGE);
+});
+
+// Functions for pagination
+const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
+const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
+
+// Function to extract text preview (140 chars)
+const getPreviewText = (body) => {
+	if (!body) return "No content available.";
+	const text = typeof body === "string" ? body : body.toString();
+	return text.slice(0, 140) + "...";
 };
 
-const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-};
-
-// Cargar los posts al iniciar
-loadPosts(currentPage.value);
+// Function to format dates
+const formatDate = (date) => new Date(date).toLocaleDateString();
 </script>
 
-<style scoped>
-.post-summary {
-  margin-bottom: 2rem;
+<style lang="scss" scoped>
+.home {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
 }
-.read-more {
-  display: inline-block;
-  margin-top: 1rem;
-  color: #007BFF;
+.post-card {
+	padding: 1rem;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	max-width: 600px;
+	width: 100%;
 }
-.date {
-  font-size: 0.9rem;
-  color: gray;
+.pagination {
+	display: flex;
+	gap: 1rem;
+	margin-top: 1rem;
+	button {
+		padding: 0.5rem 1rem;
+		cursor: pointer;
+		border: none;
+		background: #007bff;
+		color: white;
+		border-radius: 4px;
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+	}
 }
 </style>
