@@ -4,7 +4,7 @@
 			<article v-for="post in posts" :key="post._path" class="post-card">
 				<NuxtLink :to="post._path">
 					<h2>{{ post.title }}</h2>
-					<p>{{ post.summary || post.body.substring(0, 150) + "..." }}</p>
+					<p>{{ post.summary || getPreviewText(post) }}</p>
 					<small>{{ formatDate(post.date) }}</small>
 				</NuxtLink>
 			</article>
@@ -18,7 +18,14 @@ const { data: posts } = reactive(await useAsyncData("posts", () =>
 	queryContent("/blog").sort({ date: -1 }).find()
 ));
 
-// Optional: Format Date
+// Function to extract text preview from Markdown content
+const getPreviewText = (post) => {
+	if (!post.body) return "No content available.";
+	// If body is an object, extract first 150 characters
+	return typeof post.body === "string" ? post.body.slice(0, 150) + "..." : "Preview not available.";
+};
+
+// Function to format dates
 const formatDate = (date) => new Date(date).toLocaleDateString();
 </script>
 
