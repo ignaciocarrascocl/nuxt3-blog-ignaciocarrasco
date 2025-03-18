@@ -5,7 +5,6 @@
 		<img v-if="post.featuredImage" :src="post.featuredImage" :alt="post.title" class="featured-image" />
 		<MDC :value="post.body" />
 		<p class="author">By: {{ post.author }}</p>
-
 		<!-- Back to blog link -->
 		<NuxtLink to="/" class="back-link">← Back to Blog</NuxtLink>
 	</main>
